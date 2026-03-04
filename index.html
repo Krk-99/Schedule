@@ -1,10 +1,50 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Schedule!</title>
-  </head>
-  <body>
-    <h1>Writing</h1>
-    <p>Hello</p>
-  </body>
+<head>
+    <title>Frontend to Backend Example</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Simple Website</h1>
+    <!-- <button onclick="getMessage()">Get Message From Backend</button> -->
+    <!-- <form action="server.js" target="_self" method="post"> -->
+    <form id="form1">
+        <label for="info">Info:</label>
+        <input type="text" id="info" name="info"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <p id="output"></p>
+
+    <script>
+        document.getElementById("form1").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const form = event.target
+            const formdata = new FormData(form)
+            const data = Object.fromEntries(formdata.entries())
+            console.log(data)
+            fetch('http://localhost:3000/api/flight', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)})
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                document.getElementById('output').innerText = result.displaytext;
+                form.reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('output').innerText = 'An error occurred.';
+            });
+        })
+        // async function getMessage() {
+        //     try {
+        //         const response = await fetch("http://localhost:3000/api/message");
+        //         const data = await response.json();
+        //         document.getElementById("output").innerText = data.text;
+        //     } catch (error) {
+        //         console.error("Error:", error);
+        //     }
+        // }
+    </script>
+
+</body>
 </html>
