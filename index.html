@@ -23,7 +23,7 @@
             const formdata = new FormData(form)
             const data = Object.fromEntries(formdata.entries())
             console.log(data)
-            fetch('http://localhost:3000/api/flight', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)})
+            fetch('https://schedule-xnnb.onrender.com/api/flight', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)})
             .then(response => response.json())
             .then(result => {
                 console.log(result);
