@@ -10,8 +10,10 @@
     <!-- <button onclick="getMessage()">Get Message From Backend</button> -->
     <!-- <form action="server.js" target="_self" method="post"> -->
     <form id="form1">
-        <label for="info">Info:</label>
-        <input type="text" id="info" name="info"><br><br>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username"><br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name ="password"><br><br>
         <input type="submit" value="Submit">
     </form>
     <p id="output"></p>
@@ -19,15 +21,24 @@
     <script>
         document.getElementById("form1").addEventListener("submit", function (event) {
             event.preventDefault();
+            document.getElementById('output').style.color = "orange"
+            document.getElementById('output').innerText = "Sending information to server..."
             const form = event.target
             const formdata = new FormData(form)
             const data = Object.fromEntries(formdata.entries())
             console.log(data)
             fetch('https://schedule-xnnb.onrender.com/api/flight', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)})
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 200){
+                    document.getElementById('output').style.color = "green"
+                } else {
+                    document.getElementById("output").style.color = "red"
+                }
+                return response.json()
+            })
             .then(result => {
                 console.log(result);
-                document.getElementById('output').innerText = result.displaytext;
+                document.getElementById('output').innerText = result.message;
                 form.reset();
             })
             .catch(error => {
