@@ -3,14 +3,17 @@ const cors = require("cors");
 const mongoose = require("mongoose")
 
 const app = express();
-const port = process.env.PORT || 3000;
+// const port = process.env.PORT || 3000;
+const port = 3000
 
 // Enable CORS for all origins
 app.use(cors());
 
 app.use(express.json());
 
-const mongoURI = process.env.MONGODB_URI;
+const mdb = "mongodb+srv://KScheduler:<password>@krk-cluster.ga4uzz7.mongodb.net/?appName=Krk-Cluster"
+
+const mongoURI = process.env.MONGODB_URI || mdb;
 mongoose.connect(mongoURI)
     .then(() => console.log("Connected to MongoDB Atlas"))
     .catch(err => console.error("Could not connect to MongoDB: ", err));
@@ -26,7 +29,7 @@ app.post("/api/flight", async (req, res) => {
     try {
         const {username, password} = req.body;
         const foundUser = await User.findOne({username: username})
-        if (!foundUser) return res.status(404).json({message: "User not found"})
+        if (!foundUser) return res.status(404).json({message: username})
         if (password === foundUser.password) {
             res.status(200).json({message: "Access Granted"})
         } else {
