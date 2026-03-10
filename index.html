@@ -9,52 +9,24 @@
     <h1>Simple Website</h1>
     <!-- <button onclick="getMessage()">Get Message From Backend</button> -->
     <!-- <form action="server.js" target="_self" method="post"> -->
-    <form id="form1">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username"><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name ="password"><br><br>
-        <input type="submit" value="Submit">
-    </form>
-    <p id="output"></p>
-
+    <p id="alert"></p>
+    <button onclick="authenticate('home.html')">Dashboard</button>
+    <button onclick="location.href='login.html'">Log In</button>
     <script>
-        document.getElementById("form1").addEventListener("submit", function (event) {
-            event.preventDefault();
-            document.getElementById('output').style.color = "orange"
-            document.getElementById('output').innerText = "Sending information to server..."
-            const form = event.target
-            const formdata = new FormData(form)
-            const data = Object.fromEntries(formdata.entries())
-            console.log(data)
-            fetch('https://schedule-xnnb.onrender.com/api/flight', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)})
-            .then(response => {
-                if (response.status === 200){
-                    document.getElementById('output').style.color = "green"
+        async function authenticate(url) {
+            try {
+                const response = await fetch('https://schedule-xnnb.onrender.com/api/authenticate')
+                if (response.ok) {
+                    window.location.href = url
                 } else {
-                    document.getElementById("output").style.color = "red"
+                    document.getElementById('alert').innerText = "Please Login First"
+                    window.location.href = 'login.html'
+                    document.getElementById('alert').innerText = ""
                 }
-                return response.json()
-            })
-            .then(result => {
-                console.log(result);
-                document.getElementById('output').innerText = result.message;
-                form.reset();
-            })
-            .catch(error => {
+            } catch {
                 console.error('Error:', error);
-                document.getElementById('output').innerText = error.message;
-            });
-        })
-        // async function getMessage() {
-        //     try {
-        //         const response = await fetch("http://localhost:3000/api/message");
-        //         const data = await response.json();
-        //         document.getElementById("output").innerText = data.text;
-        //     } catch (error) {
-        //         console.error("Error:", error);
-        //     }
-        // }
+            }
+        }
     </script>
 
 </body>

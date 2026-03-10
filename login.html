@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Log In</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Please Sign In</h1>
+    <form id="form1">
+        <div>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username"><br><br>
+        </div>
+        <div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name ="password"><br><br>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+    <p id="output"></p>
+    <button onclick="location.href='index.html'" id="click">Hello</button>
+    <script>
+        document.getElementById("form1").addEventListener("submit", function (event) {
+            event.preventDefault();
+            document.getElementById('output').style.color = "orange"
+            document.getElementById('output').innerText = "Sending information to server..."
+            const form = event.target
+            const formdata = new FormData(form)
+            const data = Object.fromEntries(formdata.entries())
+            console.log(data)
+            fetch('https://schedule-xnnb.onrender.com/api/flight', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)})
+            .then(response => {
+                if (response.status === 200){
+                    document.getElementById('output').style.color = "green"
+                } else {
+                    document.getElementById("output").style.color = "red"
+                }
+                return response.json()
+            })
+            .then(result => {
+                console.log(result);
+                document.getElementById('output').innerText = result.message;
+                form.reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('output').innerText = error.message;
+            });
+        })
+    </script>
+
+</body>
+</html>
