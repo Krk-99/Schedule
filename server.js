@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 
 // Enable CORS for all origins
 app.use(cors({
-    origin: 'http://localhost:5500',
+    origin: 'https://krk-99.github.io/Schedule/',
     credentials: true
 }));
 
