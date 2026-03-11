@@ -6,7 +6,10 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Enable CORS for all origins
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5500',
+    credentials: true
+}));
 
 app.use(express.json());
 
@@ -18,7 +21,7 @@ app.use(session({
     cookie: {
         secure: true,
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24
+        sameSite: "none",
         }   
 }));
 const mongoURI = process.env.MONGODB_URI;
@@ -39,16 +42,24 @@ app.post("/api/flight", async (req, res) => {
         const foundUser = await User.findOne({username: username})
         if (!foundUser) return res.json({message: "User Not Found. If New Please Click I'm New and Follow Instructions Provided"})
         if (password === foundUser.password) {
-            res.status(200).json({message: "Access Granted"});
             req.session.isLoggedIn = true;
-            req.session.user = foundUser.username;   
+            req.session.user = foundUser.username;
+            req.session.save((err) => {
+                if(err) {
+                    return res.status(500).json({message: "Error Saving Please Try Again"})
+                } else{
+
+                    res.status(200).json({message: "Access Granted",
+                        session_data: req.session
+                    })
+                }
+            })
         } else {
             res.status(200).json({message: "Access Denied"})
         }
     } catch (error) {
         res.status(500).json({message: "Server Error", error})
     }
-
 });
 
 const checkAuth = (req, res, next) => {
