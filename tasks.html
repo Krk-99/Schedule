@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tasks</title>
+        <link rel="stylesheet" href="homepage.css">
+    </head>
+    <body>
+        <h1>Welcome to your Tasks</h1>
+        <div class="taskboard">
+            <div class="task">
+                <form id="taskcreate">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title"><br>
+                    <label for="desc">Description</label>
+                    <input type="text" id="desc" name="description"><br>
+                    <input type="submit" value="Submit">
+                </form>
+                <p id="output"></p>
+            </div>
+        </div>
+        <script>
+            document.getElementById("taskcreate").addEventListener("submit", function (event) {
+                event.preventDefault();
+                document.getElementById('output').style.color = "orange"
+                document.getElementById('output').innerText = "Sending information to server..."
+                const form = event.target
+                const formdata = new FormData(form)
+                const data = Object.fromEntries(formdata.entries())
+                console.log(data)
+                fetch('https://schedule-xnnb.onrender.com/api/newtask', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: "include"})
+                .then(response => {
+                    if (response.status === 200){
+                        document.getElementById('output').style.color = "green"
+                    } else {
+                        document.getElementById("output").style.color = "red"
+                    }
+                    return response.json()
+                })
+                .then(result => {
+                    console.log(result.session_data);
+                    document.getElementById('output').innerText = result.message;
+                    form.reset();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('output').innerText = error.message;
+                });
+            })
+        </script>
+    </body>
+</html>
