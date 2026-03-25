@@ -17,6 +17,9 @@
                 </form>
                 <p id="output"></p>
             </div>
+            <div id="task-container">
+                
+            </div>
         </div>
         <script>
             document.getElementById("taskcreate").addEventListener("submit", function (event) {
@@ -46,6 +49,34 @@
                     document.getElementById('output').innerText = error.message;
                 });
             })
+            async function retrievetasks(){
+                const response = await fetch("https://schedule-xnnb.onrender.com/api/gettasks", {credentials: "include"})
+
+                const tasks = await response.json()
+                console.log(tasks)
+                loadtasks(tasks);
+            }
+            function loadtasks(tasksArray){
+                const container = document.getElementById("task-container")
+                container.innerHTML = "";
+                console.log(tasksArray)
+                if (tasksArray.length == 0) {
+                    container.innerHTML = "<p>You don't have any existing tasks</p>"
+                    return;
+                }
+                tasksArray.forEach(task => {
+                    const taskcard = document.createElement('div')
+                    taskcard.className = 'task-card'
+                    const title = document.createElement('h3')
+                    title.innerText = task.title
+                    const desc = document.createElement("p")
+                    desc.innerText = task.description
+                    taskcard.appendChild(title)
+                    taskcard.appendChild(desc)
+                    container.appendChild(taskcard)
+                });
+            }
+            window.onload = retrievetasks
         </script>
     </body>
 </html>

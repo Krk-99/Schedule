@@ -96,6 +96,16 @@ app.post("/api/newtask", async (req, res) => {
     }
 })
 
+app.get("/api/gettasks", async (req, res) => {
+    try {
+        const usertasks = await Task.find({userid: req.session.userId})
+
+        res.status(200).json(usertasks)
+    } catch (error) {
+        console.log(error)
+    }
+})
+
 const checkAuth = (req, res, next) => {
     if (req.session.isLoggedIn) {
         next()
