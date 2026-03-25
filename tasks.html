@@ -71,10 +71,28 @@
                     title.innerText = task.title
                     const desc = document.createElement("p")
                     desc.innerText = task.description
+                    const dltbut = document.createElement("button")
+                    dltbut.innerText = "Delete Task"
+                    dltbut.onclick = () => deletetask(task._id, taskcard)
                     taskcard.appendChild(title)
                     taskcard.appendChild(desc)
+                    taskcard.appendChild(dltbut)
                     container.appendChild(taskcard)
                 });
+            }
+            async function deletetask(id, card) {
+                if (!confirm("Are you sure you want to delete the task")) return;
+                try {
+                    const response = await fetch(`https://schedule-xnnb.onrender.com/api/task/${id}`, {method: "DELETE", credentials:"include"})
+                    if (response.ok) {
+                        card.remove();
+                        alert("Task Succesfully Deleted");
+                    } else {
+                        alert("Task not succesfully deleted, Try again or contact Admin")
+                    }
+                } catch (error) {
+                    console.error(error)
+                }
             }
             window.onload = retrievetasks
         </script>

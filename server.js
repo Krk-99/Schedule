@@ -106,6 +106,21 @@ app.get("/api/gettasks", async (req, res) => {
     }
 })
 
+
+app.delete("/api/task/:id", async (req, res) =>{
+    try {
+        const taskid = new mongoose.Types.ObjectId(req.params.id);
+        const usid = new mongoose.Types.ObjectId(req.session.userId);
+        const deletedtask = await Task.findOneAndDelete({_id: taskid, userid: usid});
+        console.log(deletedtask)
+        if(!deletedtask) {
+            return res.status(404).json({message: "Task not found"})
+        }
+        res.status(200).json({message: "Task successfully deleted"})
+    } catch (error) {
+        console.log(error)
+    }
+})
 const checkAuth = (req, res, next) => {
     if (req.session.isLoggedIn) {
         next()
