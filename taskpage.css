@@ -23,3 +23,61 @@
     padding: 20px;
  }
 
+ .task-card {   
+    background-color: aquamarine;
+    border-radius: 12px; 
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    grid-column: auto;
+ }  
+
+ .taskboard {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+ }
+ 
+ #task-container{
+    display: grid;
+    grid-column: 2/span 2;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+ }
+
+ #popup {
+   visibility: visible;
+   position: fixed;
+   height: 70vh;
+   width: 50vw;
+   top: 15dvh;
+   left: 50dvb;
+   background-color: aqua;
+   border-radius: 5%;
+ }
+
+ #popup-title {
+   position: absolute;
+   top: 10%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+ }
+
+ #popup-desc {
+   position: absolute;
+   top: 30%;
+   left: 50%;
+   transform: translate(-50%, 0);
+ }
+
+ #closepopup {
+   position: absolute;
+   top: 80%;
+   left: 46%;
+   width: 8%;
+   height: 6%;
+   border-radius: 30%;
+ }
