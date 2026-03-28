@@ -6,6 +6,15 @@
     </head>
     <body>
         <h1>Welcome to your Tasks</h1>
+        <div id="popup">
+            <div>
+                <h1 id="popup-title"></h1>
+            </div>
+            <div>
+                <p id="popup-desc"></p>
+                <button id='closepopup' onclick="closepopup()">Close</button>
+            </div>
+        </div>
         <div class="taskboard">
             <div class="task">
                 <form id="taskcreate">
@@ -22,6 +31,7 @@
             </div>
         </div>
         <script>
+            let alltask = []
             document.getElementById("taskcreate").addEventListener("submit", function (event) {
                 event.preventDefault();
                 document.getElementById('output').style.color = "orange"
@@ -30,13 +40,14 @@
                 const formdata = new FormData(form)
                 const data = Object.fromEntries(formdata.entries())
                 console.log(data)
-                fetch('https://schedule-xnnb.onrender.com/api/newtask', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: "include"})
+                fetch('http://localhost:3000/api/newtask', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: "include"})
                 .then(response => {
                     if (response.status === 200){
                         document.getElementById('output').style.color = "green"
                     } else {
                         document.getElementById("output").style.color = "red"
                     }
+                    retrievetasks()
                     return response.json()
                 })
                 .then(result => {
@@ -49,12 +60,21 @@
                     document.getElementById('output').innerText = error.message;
                 });
             })
+            document.getElementById('task-container').addEventListener('click', (event) => {
+                const task = event.target.closest('.task-card')
+                if (!task || event.target.tagName === "BUTTON") return;
+
+                const task_id = task.dataset.id
+                const tasks = alltask.find(task => task._id === task_id)
+                document.getElementById('popup-title').innerText = tasks.title
+                document.getElementById('popup-desc').innerText = tasks.description
+                document.getElementById('popup').style.visibility = "visible"
+            })
             async function retrievetasks(){
                 const response = await fetch("https://schedule-xnnb.onrender.com/api/gettasks", {credentials: "include"})
-
-                const tasks = await response.json()
-                console.log(tasks)
-                loadtasks(tasks);
+                alltask = await response.json()
+                console.log(alltask)
+                loadtasks(alltask);
             }
             function loadtasks(tasksArray){
                 const container = document.getElementById("task-container")
@@ -73,7 +93,8 @@
                     desc.innerText = task.description
                     const dltbut = document.createElement("button")
                     dltbut.innerText = "Delete Task"
-                    dltbut.onclick = () => deletetask(task._id, taskcard)
+                    dltbut.onclick = () => deletetask(task._id, taskcard);
+                    taskcard.dataset.id = task._id;
                     taskcard.appendChild(title)
                     taskcard.appendChild(desc)
                     taskcard.appendChild(dltbut)
@@ -93,8 +114,12 @@
                 } catch (error) {
                     console.error(error)
                 }
+                retrievetasks()
             }
-            window.onload = retrievetasks
+            async function closepopup() {
+                document.getElementById('popup').style.visibility = "hidden"
+            }
+            window.onload = retrievetasks;
         </script>
     </body>
 </html>
