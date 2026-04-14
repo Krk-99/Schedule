@@ -1,55 +1,42 @@
-.task-card {   
-    background-color: aquamarine;
-    border-radius: 12px; 
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    grid-column: auto;
- }  
-
- .taskboard {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    grid-template-rows: auto 1fr;
-    height: 100vh;
- }
- 
- #task-container{
-    display: grid;
-    grid-column: 2/span 2;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 20px;
- }
-
  .task-card {   
     background-color: aquamarine;
     border-radius: 12px; 
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    grid-column: auto;
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    padding-left: 2%;
  }  
+
+  .catcard{
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    padding-left: 2%;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
 
  .taskboard {
     display: grid;
     grid-template-columns: 250px 1fr;
-    grid-template-rows: auto 1fr;
     height: 100vh;
  }
  
- #task-container{
-    display: grid;
-    grid-column: 2/span 2;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 20px;
+ .taskdiv {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
  }
+ 
+  #container {
+    display: grid;
+    grid-auto-rows: 40px;
+    row-gap: 8px;
+  }
 
  #popup {
-   visibility: visible;
+   visibility: hidden;
    position: fixed;
    height: 70vh;
    width: 50vw;
@@ -77,7 +64,16 @@
    position: absolute;
    top: 80%;
    left: 46%;
-   width: 8%;
+   width: max(8%, 50px);
    height: 6%;
    border-radius: 30%;
  }
+ #deleteTask{
+   position: absolute;
+   top: 70%;
+   left: 46%;
+   width: max(8%, 50px);
+   height: 6%;
+   border-radius: 30%;
+ }
+

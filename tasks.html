@@ -7,97 +7,164 @@
     <body>
         <h1>Welcome to your Tasks</h1>
         <div id="popup">
-            <div>
-                <h1 id="popup-title"></h1>
-            </div>
-            <div>
-                <p id="popup-desc"></p>
-                <button id='closepopup' onclick="closepopup()">Close</button>
-            </div>
+            
         </div>
         <div class="taskboard">
-            <div class="task">
-                <form id="taskcreate">
-                    <label for="title">Title</label>
-                    <input type="text" id="title" name="title"><br>
-                    <label for="desc">Description</label>
-                    <input type="text" id="desc" name="description"><br>
-                    <input type="submit" value="Submit">
-                </form>
-                <p id="output"></p>
+            <div class="formsubmission">
+                <button id="submitform" onclick="openform('category')">Create Category</button> 
+                <button id="submitform" onclick="openform('task')">Create Task</button>
+                <button onclick="home()">Home</button>
             </div>
-            <div id="task-container">
+            <div id="container">
                 
             </div>
         </div>
         <script>
-            let alltask = []
-            document.getElementById("taskcreate").addEventListener("submit", function (event) {
-                event.preventDefault();
-                document.getElementById('output').style.color = "orange"
-                document.getElementById('output').innerText = "Sending information to server..."
-                const form = event.target
-                const formdata = new FormData(form)
-                const data = Object.fromEntries(formdata.entries())
-                console.log(data)
-                fetch('https://schedule-xnnb.onrender.com/api/newtask', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: "include"})
-                .then(response => {
-                    if (response.status === 200){
-                        document.getElementById('output').style.color = "green"
-                    } else {
-                        document.getElementById("output").style.color = "red"
+            let alltask = [];
+            let allcategories = [];
+            document.addEventListener("submit", async (event) => {
+                if (event.target && event.target.id == "taskcreate") {
+                    event.preventDefault();
+                    document.getElementById('output').style.color = "orange"
+                    document.getElementById('output').innerText = "Sending information to server..."
+                    const form = event.target
+                    const formdata = new FormData(event.target)
+                    const data = Object.fromEntries(formdata.entries())
+                    console.log(data)
+                    
+                    try {
+                        const response = await fetch('https://schedule-xnnb.onrender.com/api/newtask', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: "include"});
+                        const result = await response.json()
+                        if (response.status === 200){
+                            document.getElementById('output').style.color = "green"
+                        } else {
+                            document.getElementById("output").style.color = "red"
+                        }
+                        retrievetasks()
+                        console.log(result)
+                        document.getElementById('output').innerText = result.message;
+                        form.reset();
+                    } catch(error) {
+                        console.error('Error:', error);
+                        document.getElementById('output').innerText = error.message;
                     }
-                    retrievetasks()
-                    return response.json()
-                })
-                .then(result => {
-                    console.log(result.session_data);
-                    document.getElementById('output').innerText = result.message;
-                    form.reset();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('output').innerText = error.message;
-                });
+                } else if (event.target && event.target.id == "categorycreate") {
+                    event.preventDefault();
+                    document.getElementById('output').style.color = "orange"
+                    document.getElementById('output').innerText = "Sending information to server..."
+                    const form = event.target
+                    const formdata = new FormData(event.target)
+                    const data = Object.fromEntries(formdata.entries())
+                    console.log(data)
+                    
+                    try {
+                        const response = await fetch('https://schedule-xnnb.onrender.com/api/newcategory', {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: "include"});
+                        const result = await response.json()
+                        if (response.status === 200){
+                            document.getElementById('output').style.color = "green"
+                        } else {
+                            document.getElementById("output").style.color = "red"
+                        }
+                        retrievetasks()
+                        console.log(result)
+                        document.getElementById('output').innerText = result.message;
+                        form.reset();
+                    } catch(error) {
+                        console.error('Error:', error);
+                        document.getElementById('output').innerText = error.message;
+                    }
+                }
             })
-            document.getElementById('task-container').addEventListener('click', (event) => {
-                const task = event.target.closest('.task-card')
-                if (!task || event.target.tagName === "BUTTON") return;
-
-                const task_id = task.dataset.id
-                const tasks = alltask.find(task => task._id === task_id)
-                document.getElementById('popup-title').innerText = tasks.title
-                document.getElementById('popup-desc').innerText = tasks.description
-                document.getElementById('popup').style.visibility = "visible"
+            document.getElementById('container').addEventListener('click', (event) => {
+                const category = event.target.closest('.catcard')
+                if (!category || event.target.tagName === "BUTTON") return;
+                const cat_id = category.dataset.id
+                const categoryt = allcategories.find(category => category._id == cat_id)
+                const parent = categoryt.title
+                console.log(parent)
+                loadtasks(alltask, parent)
             })
             async function retrievetasks(){
-                const response = await fetch("https://schedule-xnnb.onrender.com/api/gettasks", {credentials: "include"})
+                let response = await fetch("https://schedule-xnnb.onrender.com/api/gettasks", {credentials: "include"})
                 alltask = await response.json()
-                console.log(alltask)
-                loadtasks(alltask);
+                const response2 = await fetch("https://schedule-xnnb.onrender.com/api/getcategories", {credentials: "include"})
+                allcategories = await response2.json()
+                loadcategories(allcategories, alltask)
             }
-            function loadtasks(tasksArray){
-                const container = document.getElementById("task-container")
+
+            function loadcategories(categoriesArray, tasksArray, filter) {
+                let arrays = 1;
+                if (filter) {
+                    arrays = categoriesArray.filter(category => category.parent == filter)
+                } else {
+                    arrays = categoriesArray.filter(category => category.parent == "none")
+                }
+                document.getElementById('container').innerHTML = ""
+                if (arrays.length == 0) {
+                    loadtasks(tasksArray)
+                    console.log("No categories")
+                }
+                const container = document.getElementById('container')
+                arrays.forEach(category =>{
+                    const categorycard = document.createElement('div')
+                    categorycard.className = 'catcard'
+                    const catitle = document.createElement('h3')
+                    catitle.innerText = category.title
+                    const tdiv = document.createElement('div')
+                    const dltbut = document.createElement('button')
+                    dltbut.innerText = "Delete Category"
+                    const dltdiv = document.createElement('div')
+                    dltbut.onclick = () => deletecategory(category._id, categorycard);
+                    categorycard.dataset.id = category._id;
+                    tdiv.className = "taskdiv"
+                    dltdiv.className = "taskdiv"
+                    categorycard.appendChild(tdiv)
+                    categorycard.appendChild(dltdiv)
+                    tdiv.appendChild(catitle)
+                    dltdiv.appendChild(dltbut)
+                    container.appendChild(categorycard )
+                })
+            }
+            function loadoptions() {
+                const cat = allcategories
+                cat.forEach(category => {
+                    const option = document.createElement('option')
+                    option.value = category.title
+                    option.innerText = category.title
+                    document.getElementById('parentss').appendChild(option)
+                });
+            }
+            function loadtasks(tasksArray, filter){
+                const container = document.getElementById("container")
                 container.innerHTML = "";
-                console.log(tasksArray)
-                if (tasksArray.length == 0) {
+                let arrays;
+                console.log(arrays)
+                if (filter) {
+                    arrays = tasksArray.filter(task => task.parent == filter)
+                } else {
+                    arrays = tasksArray.filter(task => task.parent == "none")
+                }
+                if (arrays.length == 0) {
                     container.innerHTML = "<p>You don't have any existing tasks</p>"
                     return;
                 }
-                tasksArray.forEach(task => {
+                arrays.forEach(task => {
                     const taskcard = document.createElement('div')
                     taskcard.className = 'task-card'
                     const title = document.createElement('h3')
                     title.innerText = task.title
-                    const desc = document.createElement("p")
-                    desc.innerText = task.description
-                    const dltbut = document.createElement("button")
-                    dltbut.innerText = "Delete Task"
-                    dltbut.onclick = () => deletetask(task._id, taskcard);
+                    const tdiv = document.createElement('div')
+                    tdiv.className = "taskdiv"
                     taskcard.dataset.id = task._id;
-                    taskcard.appendChild(title)
-                    taskcard.appendChild(desc)
-                    taskcard.appendChild(dltbut)
+                    const expanddiv = document.createElement('div')
+                    const expandbut = document.createElement('button')
+                    expandbut.onclick = () => expandTask(taskcard)
+                    expanddiv.className = "taskdiv"
+                    expandbut.innerText = "Expand"
+                    tdiv.appendChild(title)
+                    expanddiv.appendChild(expandbut)
+                    taskcard.appendChild(tdiv)
+                    taskcard.appendChild(expanddiv)
                     container.appendChild(taskcard)
                 });
             }
@@ -119,7 +186,29 @@
             async function closepopup() {
                 document.getElementById('popup').style.visibility = "hidden"
             }
+            async function openform(type) {
+                if (type == "task") {
+                    document.getElementById('popup').innerHTML = "<form id='taskcreate'> <label for='title'>Title</label> <input type='text' id='title' name='title'><br> <label for='desc'>Description</label> <input type='text' id='desc' name='description'><br> <label for='parentss'>Parent</label><select id='parentss' name='parent'> </select><br><input type='submit' value='Submit'> </form> <p id='output'></p> <button id='closepopup' onclick='closepopup()'>Close</button> "
+                    loadoptions()
+                }
+                if (type == "category") document.getElementById('popup').innerHTML = "<form id='categorycreate'> <label for='title'>Title</label> <input type='text' id='title' name='title'><br> <label for='parent'>Category Parent</label> <input type='text' id='parent' name='parent'><br> <input type='submit' value='Submit'> </form> <p id='output'></p> <button id='closepopup' onclick='closepopup()'>Close</button>"
+                document.getElementById('popup').style.visibility = "visible"
+            }
+            async function home(){
+                loadcategories(allcategories, alltask)
+            }
+            async function expandTask(task) {
+                const task_id = task.dataset.id
+                const tasks = alltask.find(task => task._id === task_id)
+                document.getElementById('popup').innerHTML = '<div> <h1 id="popup-title"></h1> </div> <div><p id="popup-desc"></p> <button id="deleteTask" onclick="deletetask(document.getElementById(&quot;popup&quot;).dataset.taskid, document.getElementById(&quot;popup&quot;).dataset.taskcard)">Delete Task</button><button id="closepopup" onclick="closepopup()">Close</button> </div>'
+                document.getElementById('popup').dataset.taskid = task_id
+                document.getElementById('popup').dataset.taskcard = task
+                document.getElementById('popup-title').innerText = tasks.title
+                document.getElementById('popup-desc').innerText = tasks.description
+                document.getElementById('popup').style.visibility = "visible"
+            }
             window.onload = retrievetasks;
-        </script>
+
+            </script>
     </body>
-</html>
+    </html>

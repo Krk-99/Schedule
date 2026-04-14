@@ -44,29 +44,64 @@ const taskschema = new mongoose.Schema({
         type: String,
         default: 'No description'
     },
+    type: {
+        type: String, 
+        default: "task",
+        required: true,
+    },
     userid: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
+    },
+    parent: {
+        type: String, 
+        required: true, 
+        default: "none"
     }
 });
 
 const Task = mongoose.model("Task", taskschema)
+
+const categoryschema = new mongoose.Schema({
+    title: {
+        type: String,
+        required:true,
+    },
+    type: {
+        type: String,
+        required: true,
+        default: "category"
+    },
+    parent: {
+        type: String,  
+        default: "none",
+        set: v => v === '' ? undefined : v
+    },
+    userid: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required:true,
+    }
+})
+
+const Category = mongoose.model("Category", categoryschema)
+
 
 app.post("/api/flight", async (req, res) => {
     try {
         const {username, password} = req.body;
         const foundUser = await User.findOne({username: username})
         if (!foundUser) return res.json({message: "User Not Found. If New Please Click I'm New and Follow Instructions Provided"})
-        if (password === foundUser.password) {
-            req.session.isLoggedIn = true;
-            req.session.user = foundUser.username;
-            req.session.userId = foundUser._id;
+            if (password === foundUser.password) {
+                req.session.isLoggedIn = true;
+                req.session.user = foundUser.username;
+                req.session.userId = foundUser._id;
             req.session.save((err) => {
                 if(err) {
                     return res.status(500).json({message: "Error Saving Please Try Again"})
                 } else{
-
+                    
                     res.status(200).json({message: "Access Granted",
                         session_data: req.session
                     })
@@ -80,12 +115,38 @@ app.post("/api/flight", async (req, res) => {
     }
 });
 
+app.get("/api/getcategories", async (req, res) => {
+    try{
+        const usercategories = await Category.find({userid: req.session.userId})
+        res.status(200).json(usercategories)
+    } catch {
+        console.log(error)
+    }
+})
+
+app.post("/api/newcategory" , async(req, res) => {
+    try{
+        const {title, parent} = req.body
+        console.log(title)
+        console.log(parent)
+        const newcategory = new Category({
+            title: title,
+            parent: parent,
+            userid: req.session.userId
+        })
+        await newcategory.save()
+        res.status(200).json({message: "Category successfully created"})
+    } catch (error) {
+        console.log(error)
+    }
+})
 app.post("/api/newtask", async (req, res) => {
     try {
-        const {title, description} = req.body;
+        const {title, description, parent} = req.body;
         const newTask = new Task({
             title: title,
             description: description,
+            parent: parent,
             userid: req.session.userId
         })
         await newTask.save()
@@ -95,6 +156,8 @@ app.post("/api/newtask", async (req, res) => {
         res.status(400).json({message: "Server error, Please Contact Admin"})
     }
 })
+
+
 
 app.get("/api/gettasks", async (req, res) => {
     try {
