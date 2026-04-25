@@ -31,7 +31,8 @@ mongoose.connect(mongoURI)
 
 const userschema = new mongoose.Schema({
     username: String,
-    password: String
+    password: String,
+    timezone: String,
 });
 const User = mongoose.model("User", userschema);
 
@@ -46,7 +47,6 @@ const taskschema = new mongoose.Schema({
     },
     type: {
         type: String, 
-        default: "task",
         required: true,
     },
     userid: {
@@ -58,7 +58,7 @@ const taskschema = new mongoose.Schema({
         type: String, 
         required: true, 
         default: "none"
-    }
+    },
 });
 
 const Task = mongoose.model("Task", taskschema)
@@ -67,11 +67,6 @@ const categoryschema = new mongoose.Schema({
     title: {
         type: String,
         required:true,
-    },
-    type: {
-        type: String,
-        required: true,
-        default: "category"
     },
     parent: {
         type: String,  
@@ -87,6 +82,19 @@ const categoryschema = new mongoose.Schema({
 
 const Category = mongoose.model("Category", categoryschema)
 
+const dailytaskcompletionschema = new mongoose.Schema({
+    taskid: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    date: {
+        type: String,
+        required: true
+    }
+
+})
+
+const dailyTask = mongoose.model("Completion", dailytaskcompletionschema)
 
 app.post("/api/flight", async (req, res) => {
     try {
@@ -115,6 +123,21 @@ app.post("/api/flight", async (req, res) => {
     }
 });
 
+app.post("/api/signup", async (req, res) => {
+    try {
+        const {username, password, timeZone} = req.body
+        const newUser = new User({
+            username: username,
+            password: password,
+            timezone: timeZone,
+        })
+        await newUser.save()
+        res.status(200).json({message: "User succesfully created"})
+    } catch (error){
+        console(error)
+    }
+})
+
 app.get("/api/getcategories", async (req, res) => {
     try{
         const usercategories = await Category.find({userid: req.session.userId})
@@ -140,15 +163,22 @@ app.post("/api/newcategory" , async(req, res) => {
         console.log(error)
     }
 })
+
+
+
 app.post("/api/newtask", async (req, res) => {
     try {
-        const {title, description, parent} = req.body;
+        const {title, description, parent, type} = req.body;
         const newTask = new Task({
             title: title,
             description: description,
             parent: parent,
-            userid: req.session.userId
+            userid: req.session.userId,
+            ...(type && {type: type})
         })
+        if (type == "Daily") {
+            dailytaskcreation(req.session.userId, newTask._id)
+        }
         await newTask.save()
         res.status(200).json({message: "Task succesfully created"})
     } catch (error){
@@ -157,7 +187,48 @@ app.post("/api/newtask", async (req, res) => {
     }
 })
 
+async function dailytaskcreation(userid,taskid) {
+    try{
+        const user = await User.findById(userid)
+        const origdate = new Date().toLocaleDateString("en-CA", {timeZone: user.timezone})
+        const now = new Date(origdate)
+        const newDailyTask = new dailyTask({
+            taskid: taskid,
+            date: now
+        })
+        await newDailyTask.save()
+        return({status: 200, message: "Daily Task Successfully Completed"})
+    } catch (error) {
+        return({status: 500, error: error.message})
+    } 
+}
 
+app.post("/api/completeDaily/:id", async(req,res) =>{
+    const response = await dailytaskcreation(req.session.userId, req.params.id)
+    res.status(response.status).json(response)
+})
+
+app.post("/api/complete", async (req,res) => {
+    console.log("hello")
+    try{
+        const {task_id} = req.body
+        const userid = req.session.userId
+        const user = await User.findById(userid)
+        const origdate = new Date().toLocaleDateString("en-CA", {timeZone: user.timezone})
+        const now = new Date(origdate)
+        const completed = await dailyTask.findOne({date: now, taskid: task_id})
+        console.log(completed)
+        console.log("hello")
+        if (!completed) {
+            res.status(200).json({taskstatus: false})
+        } else {
+            res.status(200).json({taskstatus: true})
+        }
+    } catch (error) { 
+        console.log(error)
+        res.status(500).json({error: error, message: "Complete Check Failed"})
+    }
+})
 
 app.get("/api/gettasks", async (req, res) => {
     try {
@@ -168,7 +239,6 @@ app.get("/api/gettasks", async (req, res) => {
         console.log(error)
     }
 })
-
 
 app.delete("/api/task/:id", async (req, res) =>{
     try {
@@ -184,6 +254,7 @@ app.delete("/api/task/:id", async (req, res) =>{
         console.log(error)
     }
 })
+
 const checkAuth = (req, res, next) => {
     if (req.session.isLoggedIn) {
         next()
@@ -196,6 +267,8 @@ app.get("/api/authenticate", checkAuth, (req, res) => {
     res.status(200).json({message:`Welcome to your dashboard, ${req.session.user}!`})
 })
 
+
 app.listen(port, () => {
     // console.log(`Server running at http://localhost:${port}`);
 });
+

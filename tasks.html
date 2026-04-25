@@ -148,29 +148,74 @@
                     container.innerHTML = "<p>You don't have any existing tasks</p>"
                     return;
                 }
-                arrays.forEach(task => {
-                    const taskcard = document.createElement('div')
-                    taskcard.className = 'task-card'
-                    const title = document.createElement('h3')
-                    title.innerText = task.title
-                    const tdiv = document.createElement('div')
-                    tdiv.className = "taskdiv"
-                    taskcard.dataset.id = task._id;
-                    const expanddiv = document.createElement('div')
-                    const expandbut = document.createElement('button')
-                    expandbut.onclick = () => expandTask(taskcard)
-                    expanddiv.className = "taskdiv"
-                    expandbut.innerText = "Expand"
-                    tdiv.appendChild(title)
-                    expanddiv.appendChild(expandbut)
-                    taskcard.appendChild(tdiv)
-                    taskcard.appendChild(expanddiv)
-                    container.appendChild(taskcard)
+                arrays.forEach(async task => {
+                    if (task.type == "Daily") {
+                        const task_id = task._id
+                        const response = await fetch("https://schedule-xnnb.onrender.com/api/complete", {method: "POST", headers: {'Content-Type':'application/json'},body: JSON.stringify({task_id}), credentials: "include"})
+                        if(response.ok) {
+                            const result = await response.json()
+                            console.log(result)
+                            if (!result.taskstatus) {
+                                const taskcard = document.createElement('div')
+                                taskcard.className = 'task-card'
+                                const title = document.createElement('h3')
+                                title.innerText = task.title
+                                const tdiv = document.createElement('div')
+                                tdiv.className = "taskdiv"
+                                taskcard.dataset.id = task._id;
+                                const expanddiv = document.createElement('div')
+                                const expandbut = document.createElement('button')
+                                expandbut.onclick = () => deletetask(task._id, taskcard, "Daily")
+                                expanddiv.className = "taskdiv"
+                                expandbut.innerText = "Complete"
+                                tdiv.appendChild(title)
+                                expanddiv.appendChild(expandbut)
+                                taskcard.appendChild(tdiv)
+                                taskcard.appendChild(expanddiv)
+                                container.appendChild(taskcard)
+                            } 
+                        } else {
+                            console.log(response.error)
+                        }
+                        
+                    } else if (task.type == "Once") {
+
+                        const taskcard = document.createElement('div')
+                        taskcard.className = 'task-card'
+                        const title = document.createElement('h3')
+                        title.innerText = task.title
+                        const tdiv = document.createElement('div')
+                        tdiv.className = "taskdiv"
+                        taskcard.dataset.id = task._id;
+                        const expanddiv = document.createElement('div')
+                        const expandbut = document.createElement('button')
+                        expandbut.onclick = () => expandTask(taskcard)
+                        expanddiv.className = "taskdiv"
+                        expandbut.innerText = "Expand"
+                        tdiv.appendChild(title)
+                        expanddiv.appendChild(expandbut)
+                        taskcard.appendChild(tdiv)
+                        taskcard.appendChild(expanddiv)
+                        container.appendChild(taskcard)
+                    }
+                    
                 });
             }
-            async function deletetask(id, card) {
-                if (!confirm("Are you sure you want to delete the task")) return;
+            async function deletetask(id, card, type) {
                 try {
+                    if (type == "Daily") {
+                        if (!confirm("Are you sure you want to complete the task")) return;
+                        const response = await fetch(`https://schedule-xnnb.onrender.com/api/completeDaily/${id}`, {method: "POST", credentials:"include"})
+                        if (response.status) {
+                            card.remove()
+                            alert("Daily Task Succesfully Completed")
+                        } else {
+                            alert("Daily Task not successfully completed. Try again or contact Admin")
+                        }
+                        return
+                        
+                    }
+                    if (!confirm("Are you sure you want to delete the task")) return;
                     const response = await fetch(`https://schedule-xnnb.onrender.com/api/task/${id}`, {method: "DELETE", credentials:"include"})
                     if (response.ok) {
                         card.remove();
@@ -188,7 +233,7 @@
             }
             async function openform(type) {
                 if (type == "task") {
-                    document.getElementById('popup').innerHTML = "<form id='taskcreate'> <label for='title'>Title</label> <input type='text' id='title' name='title'><br> <label for='desc'>Description</label> <input type='text' id='desc' name='description'><br> <label for='parentss'>Parent</label><select id='parentss' name='parent'> </select><br><input type='submit' value='Submit'> </form> <p id='output'></p> <button id='closepopup' onclick='closepopup()'>Close</button> "
+                    document.getElementById('popup').innerHTML = "<form id='taskcreate'> <label for='title'>Title</label> <input type='text' id='title' name='title'><br> <label for='desc'>Description</label> <input type='text' id='desc' name='description'><br> <label for='parentss'>Parent</label><select id='parentss' name='parent'> <br> </select> <br> <label for='type'>Type</label> <select id='type' name='type'> <br> <option value='Once'>One Time Task</option> <option value='Daily'>Daily Task</option>  </select>  <br><input type='submit' value='Submit'> </form> <p id='output'></p> <button id='closepopup' onclick='closepopup()'>Close</button> "
                     loadoptions()
                 }
                 if (type == "category") document.getElementById('popup').innerHTML = "<form id='categorycreate'> <label for='title'>Title</label> <input type='text' id='title' name='title'><br> <label for='parent'>Category Parent</label> <input type='text' id='parent' name='parent'><br> <input type='submit' value='Submit'> </form> <p id='output'></p> <button id='closepopup' onclick='closepopup()'>Close</button>"
